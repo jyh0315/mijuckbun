@@ -1,0 +1,563 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>뉴런 발화의 네 가지 유형</title>
+<style>
+  :root{
+    --paper:#EFF2F6;
+    --card:#FFFFFF;
+    --ink:#1A2230;
+    --muted:#65748C;
+    --edge:#D3DBE5;
+    --red:#CE3227;      /* V 관련 */
+    --green:#0E9F6E;    /* w 관련 */
+    --indigo:#2F3E9E;   /* 궤적 */
+    --amber:#EFAF23;    /* 자극 */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif}
+  .num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 44px}
+
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 24px;
+    padding-bottom:14px;border-bottom:1.5px solid var(--ink);margin-bottom:16px}
+  h1{margin:0;font-size:25px;font-weight:650;letter-spacing:-.02em}
+  header p{margin:5px 0 0;font-size:13.5px;color:var(--muted);max-width:56ch;line-height:1.6}
+  .headtext{flex:1 1 340px}
+  .transport{display:flex;gap:8px;flex-wrap:wrap}
+
+  button{font:inherit;font-size:13.5px;color:var(--ink);background:var(--card);
+    border:1.2px solid var(--edge);border-radius:4px;padding:7px 13px;cursor:pointer}
+  button:hover{border-color:var(--muted)}
+  button:focus-visible{outline:2.5px solid var(--indigo);outline-offset:2px}
+  button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  button.stim{background:var(--amber);border-color:#C9902A;font-weight:600}
+
+  .modes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+  .mode{background:var(--card);border:1.2px solid var(--edge);border-radius:5px;
+    padding:11px 13px;cursor:pointer;text-align:left;line-height:1.35}
+  .mode .en{font-family:Georgia,"Times New Roman",serif;font-size:15.5px;letter-spacing:-.01em}
+  .mode .sub{font-size:12px;color:var(--muted);margin-top:3px}
+  .mode[aria-pressed="true"]{border-color:var(--ink);border-width:2px;padding:10px 12px;
+    background:#F4F7FB;box-shadow:inset 0 -3px 0 var(--indigo)}
+
+  .guide{background:var(--card);border:1.2px solid var(--edge);border-left:4px solid var(--indigo);
+    border-radius:4px;padding:11px 14px;margin-bottom:16px;font-size:13.5px;line-height:1.65}
+  .guide b{font-weight:600}
+
+  .panels{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px}
+  .panel{background:var(--card);border:1.2px solid var(--edge);border-radius:5px;padding:12px 14px 14px;min-width:0}
+  .panel h2{margin:0 0 3px;font-size:15px;font-weight:600}
+  .panel .hint{margin:0 0 9px;font-size:12px;color:var(--muted);line-height:1.5}
+  canvas{display:block;width:100%;border-radius:3px;touch-action:none;cursor:crosshair}
+
+  .legend{display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:9px;font-size:12px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .swatch{width:16px;height:0;border-top-width:2.5px;border-top-style:solid}
+  .swatch.dash{border-top-style:dashed}
+  .readout{display:flex;flex-wrap:wrap;gap:3px 18px;margin-top:10px;padding-top:9px;
+    border-top:1px dashed var(--edge);font-size:12.5px;color:var(--muted)}
+  .readout b{font-weight:600;color:var(--ink)}
+  .state{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;
+    border:1.2px solid var(--edge)}
+
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px}
+  fieldset{margin:0;border:1.2px solid var(--edge);border-radius:5px;background:var(--card);padding:8px 14px 14px}
+  legend{font-size:13px;font-weight:600;padding:0 6px}
+  .row{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:3px;margin-top:12px}
+  .row label{font-size:13px}
+  .row .val{font-size:12.5px;color:var(--muted)}
+  .row .desc{grid-column:1/-1;font-size:11.5px;color:var(--muted);margin-top:-1px}
+  input[type=range]{grid-column:1/-1;width:100%;margin:5px 0 0;accent-color:var(--indigo)}
+  .checks{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;font-size:13px}
+  .checks label{display:flex;align-items:center;gap:6px;cursor:pointer}
+  input[type=checkbox]{accent-color:var(--indigo);width:15px;height:15px}
+  footer{margin-top:20px;font-size:12.5px;color:var(--muted);line-height:1.75}
+  code{background:#E5EAF1;padding:1.5px 5px;border-radius:3px;font-size:12px}
+  @media (max-width:900px){ .panels{grid-template-columns:1fr} .modes{grid-template-columns:repeat(2,1fr)} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="headtext">
+      <h1>뉴런 발화의 네 가지 유형</h1>
+      <p>같은 Morris–Lecar 뉴런이라도 널클라인이 만나는 방식에 따라 발화가 시작되는 방식이 다릅니다. 네 가지를 눌러 바꿔가며, 자극에 어떻게 반응하는지 비교해 보세요.</p>
+    </div>
+    <div class="transport">
+      <button id="playBtn" class="primary">일시정지</button>
+      <button id="resetBtn">휴지 상태로</button>
+      <button id="stimBtn" class="stim">자극 (S)</button>
+    </div>
+  </header>
+
+  <div class="modes" id="modes"></div>
+  <div class="guide" id="guide"></div>
+
+  <main class="panels">
+    <section class="panel">
+      <h2>위상평면</h2>
+      <p class="hint">빈 곳을 클릭하면 그 상태에서 다시 출발합니다. 널클라인을 잡아끌면 빨간 곡선은 I가, 초록 곡선은 V₃가 따라 바뀝니다.</p>
+      <canvas id="phase" height="470"></canvas>
+      <div class="legend">
+        <span><i class="swatch" style="border-color:var(--red)"></i>V 널클라인</span>
+        <span><i class="swatch" style="border-color:var(--green)"></i>w 널클라인</span>
+        <span><i class="swatch" style="border-color:var(--indigo)"></i>궤적</span>
+        <span><i class="swatch dash" style="border-color:var(--indigo)"></i>리미트 사이클</span>
+      </div>
+      <div class="readout num">
+        <span>V <b id="rv">—</b> mV</span>
+        <span>w <b id="rw">—</b></span>
+        <span style="font-family:inherit">고정점 <b id="rfp">—</b></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>시간에 따른 변화</h2>
+      <p class="hint">위로 크게 튀는 구간이 활동전위입니다. 노란 띠는 자극이 들어간 시간입니다.</p>
+      <canvas id="trace" height="470"></canvas>
+      <div class="legend">
+        <span><i class="swatch" style="border-color:var(--red)"></i>V · 막전위 (mV)</span>
+        <span><i class="swatch" style="border-color:var(--green)"></i>w · K⁺ 통로 열림</span>
+        <span><i class="swatch" style="border-color:var(--amber);border-top-width:6px"></i>자극</span>
+      </div>
+      <div class="readout num">
+        <span>t <b id="rt">0</b> ms</span>
+        <span>발화율 <b id="rrate">—</b></span>
+        <span style="font-family:inherit">현재 <span class="state" id="rstate">—</span></span>
+      </div>
+    </section>
+  </main>
+
+  <div class="controls">
+    <fieldset>
+      <legend>널클라인</legend>
+      <div class="row">
+        <label for="sI">I · 주입 전류</label><span class="val num" id="vI">0</span>
+        <div class="desc">빨간 곡선이 위아래로 움직입니다. 발화가 시작되는 문턱을 찾아보세요</div>
+        <input type="range" id="sI" min="0" max="60" step="0.2" value="38">
+      </div>
+      <div class="row">
+        <label for="sV3">V₃ · 초록 곡선의 위치</label><span class="val num" id="vV3">12</span>
+        <div class="desc">K⁺ 통로가 절반쯤 열리는 전압. 많이 옮기면 유형 자체가 바뀝니다</div>
+        <input type="range" id="sV3" min="-40" max="30" step="0.5" value="12">
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="cField" checked> 흐름 화살표</label>
+        <label><input type="checkbox" id="cLC" checked> 리미트 사이클</label>
+        <label><input type="checkbox" id="cTrail" checked> 궤적 잔상</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>자극</legend>
+      <div class="row">
+        <label for="sAmp">세기</label><span class="val num" id="vAmp">40</span>
+        <div class="desc">음수면 억제성 자극입니다</div>
+        <input type="range" id="sAmp" min="-120" max="200" step="1" value="40">
+      </div>
+      <div class="row">
+        <label for="sDur">길이</label><span class="val num" id="vDur">10</span>
+        <div class="desc">버튼을 누르고 있으면 그동안 계속 들어갑니다 (ms)</div>
+        <input type="range" id="sDur" min="1" max="150" step="1" value="10">
+      </div>
+      <div class="row">
+        <label for="sSpd">진행 속도</label><span class="val num" id="vSpd">1.0×</span>
+        <input type="range" id="sSpd" min="0.1" max="3" step="0.1" value="1">
+      </div>
+    </fieldset>
+  </div>
+
+  <footer>
+    <code>C dV/dt = I − g_L(V−E_L) − g_Ca·m∞(V)(V−E_Ca) − g_K·w(V−E_K)</code>,
+    <code>dw/dt = φ(w∞(V) − w)·cosh((V−V₃)/2V₄)</code>.
+    네 유형은 g_Ca, g_K, V₃, V₄, φ 값만 다릅니다. 고정점 표시는 ● 안정, ○ 불안정, ✕ 안장점입니다.
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const C=20, gL=2, EK=-84, EL=-60, ECa=120, V1=-1.2, V2=18;
+  const P = { gCa:4, gK:8, V3:12, V4:17.4, phi:0.23, I0:38, amp:40, dur:10, speed:1 };
+
+  const MODES = {
+    sn:{ en:"Saddle–Node", sub:"쌍안정 적분기", set:{gCa:4,gK:8,V3:12,V4:17.4,phi:0.23},
+         I:38, Irange:[0,60], amp:40, dur:10,
+         guide:"<b>휴지 상태와 발화 상태가 동시에 존재합니다.</b> 지금 뉴런은 쉬고 있지만, 같은 전류에서 계속 도는 리미트 사이클(점선)도 함께 있습니다. 자극을 한 번 줘서 발화를 켜고, 세기를 음수로 바꿔 다시 꺼 보세요. 자극이 끝나도 상태가 유지됩니다." },
+    snic:{ en:"SNIC", sub:"단안정 적분기", set:{gCa:4,gK:8,V3:12,V4:17.4,phi:0.0667},
+         I:32, Irange:[0,60], amp:30, dur:10,
+         guide:"<b>안장점(✕)이 발화 문턱입니다.</b> 자극 세기를 조금씩 올려 궤적이 안장점을 넘는 순간을 찾아보세요. I를 40 근처까지 천천히 올리면 안정점과 안장점이 만나 사라지면서, 발화율이 0 Hz에서부터 아주 느리게 시작합니다." },
+    subhopf:{ en:"Subcritical Hopf", sub:"쌍안정 공명기", set:{gCa:4.4,gK:8,V3:2,V4:30,phi:0.04},
+         I:91, Irange:[60,140], amp:30, dur:8,
+         guide:"<b>휴지점은 안정이지만 큰 진동이 함께 존재합니다.</b> 자극을 주면 진폭이 작은 상태에서 큰 진동으로 건너뜁니다. 중간 크기의 발화는 없습니다. 짧은 자극을 리듬에 맞춰 두 번 주면 한 번 줄 때보다 잘 넘어갑니다." },
+    suphopf:{ en:"Supercrit. Hopf", sub:"단안정 공명기", set:{gCa:4,gK:8,V3:0,V4:20,phi:0.15},
+         I:78, Irange:[40,140], amp:30, dur:8,
+         guide:"<b>진동이 0에서부터 서서히 자라납니다.</b> I를 84 근처로 천천히 올려보세요. 갑자기 큰 스파이크가 아니라 작은 흔들림에서 시작해 진폭이 커집니다. 84 아래에서는 자극을 줘도 감쇠 진동만 남습니다." }
+  };
+  let mode = "sn";
+
+  const S={V:-40,w:0.05,t:0};
+  let running=true, holding=false, pulseStart=-1e9, pulseUntil=-1e9;
+  let lastSpikeT=null, isi=null, above=false;
+  const WIN=520; let hist=[], traj=[]; const TRAJMAX=2600;
+  const show={field:true, lc:true, trail:true};
+  let cycle=null, regime="—";
+
+  const VMIN=-90, VMAX=50, WMIN=-0.05, WMAX=1.05;
+
+  const minf=V=>0.5*(1+Math.tanh((V-V1)/V2));
+  const winf=V=>0.5*(1+Math.tanh((V-P.V3)/P.V4));
+  const chw =V=>Math.cosh((V-P.V3)/(2*P.V4));
+  const dVf=(V,w,I)=>(I-gL*(V-EL)-P.gCa*minf(V)*(V-ECa)-P.gK*w*(V-EK))/C;
+  const dWf=(V,w)=>P.phi*(winf(V)-w)*chw(V);
+  const curI=()=>{ const on=holding||S.t<pulseUntil; return {I:P.I0+(on?P.amp:0), stim:on}; };
+  const vNull=(V,I)=>(I-gL*(V-EL)-P.gCa*minf(V)*(V-ECa))/(P.gK*(V-EK));
+
+  function rk4(V,w,I,dt){
+    const a1=dVf(V,w,I), b1=dWf(V,w);
+    const a2=dVf(V+dt/2*a1,w+dt/2*b1,I), b2=dWf(V+dt/2*a1,w+dt/2*b1);
+    const a3=dVf(V+dt/2*a2,w+dt/2*b2,I), b3=dWf(V+dt/2*a2,w+dt/2*b2);
+    const a4=dVf(V+dt*a3,w+dt*b3,I),     b4=dWf(V+dt*a3,w+dt*b3);
+    return [V+dt/6*(a1+2*a2+2*a3+a4), w+dt/6*(b1+2*b2+2*b3+b4)];
+  }
+
+  function step(dt){
+    const {I}=curI();
+    const r=rk4(S.V,S.w,I,dt); S.V=r[0]; S.w=r[1]; S.t+=dt;
+    if(!isFinite(S.V)||!isFinite(S.w)){S.V=EL;S.w=winf(EL);}
+    S.w=Math.min(1.2,Math.max(-0.2,S.w));
+    if(!above && S.V>0){ above=true; if(lastSpikeT!==null) isi=S.t-lastSpikeT; lastSpikeT=S.t; }
+    else if(above && S.V<-20) above=false;
+  }
+
+  function record(){
+    const {stim}=curI();
+    hist.push({t:S.t,V:S.V,w:S.w,stim});
+    while(hist.length && hist[0].t<S.t-WIN) hist.shift();
+    traj.push({V:S.V,w:S.w});
+    if(traj.length>TRAJMAX) traj.splice(0,traj.length-TRAJMAX);
+  }
+
+  function fixedPoints(I){
+    const g=V=>vNull(V,I)-winf(V); const out=[];
+    let pv=VMIN, prev=g(pv);
+    for(let i=1;i<=1400;i++){
+      const V=VMIN+(VMAX-VMIN)*i/1400, cur=g(V);
+      if(isFinite(prev)&&isFinite(cur)&&prev*cur<0&&Math.abs(V-EK)>2){
+        let lo=pv,hi=V;
+        for(let k=0;k<50;k++){const m=(lo+hi)/2; (g(lo)*g(m)<=0)?hi=m:lo=m;}
+        const Vf=(lo+hi)/2; out.push(classify(Vf,winf(Vf),I));
+      }
+      prev=cur; pv=V;
+    }
+    return out;
+  }
+  function classify(V,w,I){
+    const h=1e-4;
+    const a=(dVf(V+h,w,I)-dVf(V-h,w,I))/(2*h), b=(dVf(V,w+h,I)-dVf(V,w-h,I))/(2*h);
+    const c=(dWf(V+h,w)-dWf(V-h,w))/(2*h),     d=(dWf(V,w+h)-dWf(V,w-h))/(2*h);
+    const tr=a+d, det=a*d-b*c;
+    if(det<0) return {V,w,kind:"안장점",stable:false,saddle:true};
+    const sp=tr*tr-4*det<0;
+    return {V,w,saddle:false,stable:tr<0,kind:(tr<0?"안정 ":"불안정 ")+(sp?"나선점":"마디점")};
+  }
+
+  // 리미트 사이클 + 상태 분류 (파라미터 바뀔 때만)
+  function findCycle(){
+    const I=P.I0;
+    const fps=fixedPoints(I);
+    const stable=fps.filter(f=>f.stable);
+    const base=stable.length?stable[0]:(fps.length?fps[0]:{V:-40,w:winf(-40)});
+    const seeds=[[base.V+40,Math.max(0,base.w-0.25)],[base.V-25,Math.min(1,base.w+0.3)],
+                 [base.V+3,base.w],[10,0.05]];
+    let best=null;
+    for(const s of seeds){
+      let V=s[0], w=s[1];
+      for(let k=0;k<25000;k++){ const r=rk4(V,w,I,0.1); V=r[0]; w=r[1];
+        if(!isFinite(V)) break; }
+      if(!isFinite(V)) continue;
+      const pts=[]; let mn=1e9,mx=-1e9;
+      for(let k=0;k<12000;k++){ const r=rk4(V,w,I,0.1); V=r[0]; w=r[1];
+        if(k%3===0) pts.push({V,w});
+        mn=Math.min(mn,V); mx=Math.max(mx,V); }
+      if(mx-mn>4){ best=pts; break; }
+    }
+    cycle = best;
+    regime = best ? (stable.length ? "쌍안정" : "반복 발화") : (stable.length ? "단안정 휴지" : "—");
+  }
+  let cycTimer=null;
+  const scheduleCycle=()=>{ clearTimeout(cycTimer); cycTimer=setTimeout(findCycle,180); };
+
+  const $=id=>document.getElementById(id);
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function fit(cv){
+    const dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
+    if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+    const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h};
+  }
+
+  const phaseCv=$("phase");
+  function drawPhase(){
+    const {ctx,w:W,h:H}=fit(phaseCv);
+    const pad={l:46,r:12,t:12,b:34};
+    const X=V=>pad.l+(V-VMIN)/(VMAX-VMIN)*(W-pad.l-pad.r);
+    const Y=w=>H-pad.b-(w-WMIN)/(WMAX-WMIN)*(H-pad.t-pad.b);
+    phaseCv._map={X,Y,inv:(px,py)=>[VMIN+(px-pad.l)/(W-pad.l-pad.r)*(VMAX-VMIN),
+                                    WMIN+(H-pad.b-py)/(H-pad.t-pad.b)*(WMAX-WMIN)]};
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle="#fff"; ctx.fillRect(pad.l,pad.t,W-pad.l-pad.r,H-pad.t-pad.b);
+
+    ctx.strokeStyle="#E7ECF2"; ctx.lineWidth=1;
+    ctx.fillStyle=css("--muted"); ctx.font="11px ui-monospace,monospace";
+    ctx.textAlign="center"; ctx.textBaseline="top";
+    for(let V=-80;V<=40;V+=20){ctx.beginPath();ctx.moveTo(X(V),pad.t);ctx.lineTo(X(V),H-pad.b);ctx.stroke();
+      ctx.fillText(String(V),X(V),H-pad.b+7);}
+    ctx.textAlign="right"; ctx.textBaseline="middle";
+    for(let w=0;w<=1.001;w+=0.2){ctx.beginPath();ctx.moveTo(pad.l,Y(w));ctx.lineTo(W-pad.r,Y(w));ctx.stroke();
+      ctx.fillText(w.toFixed(1),pad.l-7,Y(w));}
+    ctx.strokeStyle=css("--edge"); ctx.strokeRect(pad.l,pad.t,W-pad.l-pad.r,H-pad.t-pad.b);
+    ctx.fillStyle=css("--muted"); ctx.font="12px system-ui,sans-serif";
+    ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.fillText("막전위 V (mV)",(pad.l+W-pad.r)/2,H-2);
+    ctx.save(); ctx.translate(12,(pad.t+H-pad.b)/2); ctx.rotate(-Math.PI/2);
+    ctx.textBaseline="top"; ctx.fillText("K⁺ 통로 열림 w",0,0); ctx.restore();
+
+    ctx.save(); ctx.beginPath(); ctx.rect(pad.l,pad.t,W-pad.l-pad.r,H-pad.t-pad.b); ctx.clip();
+    const I=curI().I;
+
+    if(show.field){
+      const n=16;
+      ctx.strokeStyle="rgba(101,116,140,.42)"; ctx.fillStyle="rgba(101,116,140,.42)"; ctx.lineWidth=1;
+      for(let i=0;i<=n;i++) for(let j=0;j<=n;j++){
+        const V=VMIN+(VMAX-VMIN)*i/n, w=WMIN+(WMAX-WMIN)*j/n;
+        const px=X(V),py=Y(w);
+        let ax=X(V+dVf(V,w,I))-px, ay=Y(w+dWf(V,w))-py;
+        const m=Math.hypot(ax,ay)||1, L=12; ax=ax/m*L; ay=ay/m*L;
+        ctx.beginPath(); ctx.moveTo(px-ax/2,py-ay/2); ctx.lineTo(px+ax/2,py+ay/2); ctx.stroke();
+        const an=Math.atan2(ay,ax);
+        ctx.beginPath(); ctx.moveTo(px+ax/2,py+ay/2);
+        ctx.lineTo(px+ax/2-4.5*Math.cos(an-0.42),py+ay/2-4.5*Math.sin(an-0.42));
+        ctx.lineTo(px+ax/2-4.5*Math.cos(an+0.42),py+ay/2-4.5*Math.sin(an+0.42));
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    if(show.lc && cycle && cycle.length>2){
+      ctx.strokeStyle="rgba(47,62,158,.55)"; ctx.lineWidth=1.8; ctx.setLineDash([5,4]);
+      ctx.beginPath();
+      for(let i=0;i<cycle.length;i++){const p=cycle[i]; i?ctx.lineTo(X(p.V),Y(p.w)):ctx.moveTo(X(p.V),Y(p.w));}
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    ctx.lineWidth=2.6; ctx.strokeStyle=css("--red");
+    for(const seg of [[VMIN,EK-0.4],[EK+0.4,VMAX]]){
+      ctx.beginPath(); let on=false;
+      for(let i=0;i<=500;i++){
+        const V=seg[0]+(seg[1]-seg[0])*i/500, w=vNull(V,I);
+        if(!isFinite(w)||w<WMIN-2||w>WMAX+2){on=false;continue;}
+        on?ctx.lineTo(X(V),Y(w)):(ctx.moveTo(X(V),Y(w)),on=true);
+      }
+      ctx.stroke();
+    }
+    ctx.strokeStyle=css("--green"); ctx.beginPath();
+    for(let i=0;i<=500;i++){const V=VMIN+(VMAX-VMIN)*i/500;
+      i?ctx.lineTo(X(V),Y(winf(V))):ctx.moveTo(X(V),Y(winf(V)));}
+    ctx.stroke();
+
+    if(show.trail && traj.length>1){
+      ctx.lineWidth=2; ctx.lineJoin="round";
+      const bands=7, per=Math.ceil(traj.length/bands);
+      for(let b=0;b<bands;b++){
+        const s=b*per, e=Math.min(traj.length,s+per+1); if(e-s<2) continue;
+        ctx.strokeStyle=`rgba(47,62,158,${0.08+0.92*(b+1)/bands})`;
+        ctx.beginPath();
+        for(let i=s;i<e;i++){const p=traj[i]; i===s?ctx.moveTo(X(p.V),Y(p.w)):ctx.lineTo(X(p.V),Y(p.w));}
+        ctx.stroke();
+      }
+    }
+
+    ctx.lineWidth=2.2;
+    for(const f of fixedPoints(I)){
+      const px=X(f.V), py=Y(f.w);
+      if(f.saddle){ ctx.strokeStyle=css("--ink");
+        ctx.beginPath(); ctx.moveTo(px-6,py-6); ctx.lineTo(px+6,py+6);
+        ctx.moveTo(px+6,py-6); ctx.lineTo(px-6,py+6); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.arc(px,py,5.5,0,7);
+        if(f.stable){ctx.fillStyle=css("--ink");ctx.fill();}
+        else {ctx.strokeStyle=css("--ink");ctx.fillStyle="#fff";ctx.fill();ctx.stroke();}
+      }
+    }
+
+    ctx.beginPath(); ctx.arc(X(S.V),Y(S.w),6.5,0,7);
+    ctx.fillStyle=css("--indigo"); ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle="#fff"; ctx.stroke();
+    ctx.restore();
+  }
+
+  const traceCv=$("trace");
+  function drawTrace(){
+    const {ctx,w:W,h:H}=fit(traceCv);
+    const pad={l:42,r:36,t:12,b:34};
+    const t1=Math.max(S.t,WIN), t0=t1-WIN;
+    const X=t=>pad.l+(t-t0)/WIN*(W-pad.l-pad.r);
+    const YV=v=>H-pad.b-(v+90)/140*(H-pad.t-pad.b);
+    const YW=w=>H-pad.b-(w+0.05)/1.10*(H-pad.t-pad.b);
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle="#fff"; ctx.fillRect(pad.l,pad.t,W-pad.l-pad.r,H-pad.t-pad.b);
+    ctx.save(); ctx.beginPath(); ctx.rect(pad.l,pad.t,W-pad.l-pad.r,H-pad.t-pad.b); ctx.clip();
+
+    ctx.fillStyle="rgba(239,175,35,.35)";
+    let st=null;
+    for(let i=0;i<hist.length;i++){
+      if(hist[i].stim&&st===null) st=hist[i].t;
+      if((!hist[i].stim||i===hist.length-1)&&st!==null){
+        ctx.fillRect(X(st),pad.t,Math.max(1.5,X(hist[i].t)-X(st)),H-pad.t-pad.b); st=null;
+      }
+    }
+    ctx.strokeStyle="#E7ECF2"; ctx.lineWidth=1;
+    for(let v=-80;v<=40;v+=20){ctx.beginPath();ctx.moveTo(pad.l,YV(v));ctx.lineTo(W-pad.r,YV(v));ctx.stroke();}
+    ctx.strokeStyle="#CBD5E0"; ctx.beginPath(); ctx.moveTo(pad.l,YV(0)); ctx.lineTo(W-pad.r,YV(0)); ctx.stroke();
+
+    ctx.strokeStyle=css("--green"); ctx.lineWidth=1.7; ctx.beginPath();
+    for(let i=0;i<hist.length;i++){const p=hist[i]; i?ctx.lineTo(X(p.t),YW(p.w)):ctx.moveTo(X(p.t),YW(p.w));}
+    ctx.stroke();
+    ctx.strokeStyle=css("--red"); ctx.lineWidth=2.2; ctx.beginPath();
+    for(let i=0;i<hist.length;i++){const p=hist[i]; i?ctx.lineTo(X(p.t),YV(p.V)):ctx.moveTo(X(p.t),YV(p.V));}
+    ctx.stroke();
+    if(hist.length){const p=hist[hist.length-1];
+      ctx.beginPath(); ctx.arc(X(p.t),YV(p.V),4.5,0,7); ctx.fillStyle=css("--red"); ctx.fill();}
+    ctx.restore();
+
+    ctx.strokeStyle=css("--edge"); ctx.strokeRect(pad.l,pad.t,W-pad.l-pad.r,H-pad.t-pad.b);
+    ctx.font="11px ui-monospace,monospace"; ctx.textBaseline="middle";
+    ctx.fillStyle=css("--red"); ctx.textAlign="right";
+    for(let v=-80;v<=40;v+=20) ctx.fillText(String(v),pad.l-7,YV(v));
+    ctx.fillStyle=css("--green"); ctx.textAlign="left";
+    for(let w=0;w<=1.001;w+=0.5) ctx.fillText(w.toFixed(1),W-pad.r+7,YW(w));
+    ctx.fillStyle=css("--muted"); ctx.textAlign="center"; ctx.textBaseline="top";
+    for(let k=0;k<=4;k++){const t=t0+WIN*k/4; ctx.fillText(t.toFixed(0),X(t),H-pad.b+7);}
+    ctx.font="12px system-ui,sans-serif"; ctx.textBaseline="bottom";
+    ctx.fillText("시간 (ms)",(pad.l+W-pad.r)/2,H-2);
+  }
+
+  function readout(){
+    $("rv").textContent=S.V.toFixed(1);
+    $("rw").textContent=S.w.toFixed(3);
+    $("rt").textContent=S.t.toFixed(0);
+    const firing = lastSpikeT!==null && S.t-lastSpikeT<400;
+    $("rrate").textContent=(firing&&isi)?(1000/isi).toFixed(1)+" Hz":"—";
+    const f=fixedPoints(curI().I);
+    $("rfp").textContent=f.length?f.map(x=>x.kind).join(" · "):"없음";
+    const el=$("rstate");
+    el.textContent = firing ? "발화 중 · "+regime : regime;
+    el.style.borderColor = firing ? css("--red") : css("--edge");
+    el.style.color = firing ? css("--red") : css("--muted");
+  }
+
+  let last=performance.now();
+  function frame(now){
+    const dtR=Math.min(0.05,(now-last)/1000); last=now;
+    if(running){
+      const dt=0.05, n=Math.min(2500,Math.round(220*P.speed*dtR/dt));
+      for(let i=0;i<n;i++){ step(dt); if(i%4===0) record(); }
+      if(n>0) record();
+    }
+    drawPhase(); drawTrace(); readout();
+    requestAnimationFrame(frame);
+  }
+
+  function restState(){
+    const f=fixedPoints(P.I0).filter(x=>x.stable);
+    return f.length?{V:f[0].V,w:f[0].w}:{V:EL,w:winf(EL)};
+  }
+  function reset(){
+    const r=restState(); S.V=r.V; S.w=r.w; S.t=0;
+    hist=[]; traj=[]; lastSpikeT=null; isi=null; above=false; holding=false; pulseUntil=-1e9;
+  }
+
+  // 모듈 탭
+  const modesEl=$("modes");
+  Object.entries(MODES).forEach(([k,m])=>{
+    const b=document.createElement("button");
+    b.className="mode"; b.dataset.k=k; b.setAttribute("aria-pressed", k===mode);
+    b.innerHTML=`<div class="en">${m.en}</div><div class="sub">${m.sub}</div>`;
+    b.onclick=()=>setMode(k);
+    modesEl.appendChild(b);
+  });
+  function setMode(k){
+    mode=k; const m=MODES[k];
+    Object.assign(P,m.set); P.I0=m.I; P.amp=m.amp; P.dur=m.dur;
+    $("sI").min=m.Irange[0]; $("sI").max=m.Irange[1];
+    document.querySelectorAll(".mode").forEach(b=>b.setAttribute("aria-pressed", b.dataset.k===k));
+    $("guide").innerHTML=m.guide;
+    sync(); reset(); findCycle();
+  }
+
+  const SL=[["sI","vI","I0",x=>x.toFixed(1)],["sV3","vV3","V3",x=>x.toFixed(1)],
+            ["sAmp","vAmp","amp",x=>x.toFixed(0)],["sDur","vDur","dur",x=>x.toFixed(0)],
+            ["sSpd","vSpd","speed",x=>x.toFixed(1)+"×"]];
+  SL.forEach(([id,out,key,fmt])=>{
+    const el=$(id);
+    el.addEventListener("input",()=>{ P[key]=parseFloat(el.value); $(out).textContent=fmt(P[key]);
+      if(key==="I0"||key==="V3") scheduleCycle(); });
+  });
+  const sync=()=>SL.forEach(([id,out,key,fmt])=>{$(id).value=P[key]; $(out).textContent=fmt(P[key]);});
+
+  $("playBtn").onclick=e=>{running=!running; e.target.textContent=running?"일시정지":"재생";};
+  $("resetBtn").onclick=reset;
+  const stimBtn=$("stimBtn");
+  stimBtn.addEventListener("pointerdown",e=>{e.preventDefault(); holding=true; pulseStart=S.t;});
+  const rel=()=>{if(!holding)return; holding=false; pulseUntil=Math.max(S.t,pulseStart+P.dur);};
+  stimBtn.addEventListener("pointerup",rel); stimBtn.addEventListener("pointerleave",rel);
+  window.addEventListener("pointerup",rel);
+  window.addEventListener("keydown",e=>{
+    if(e.target.tagName==="INPUT")return;
+    if(e.key==="s"||e.key==="S"){pulseStart=S.t; pulseUntil=S.t+P.dur;}
+    if(e.code==="Space"){e.preventDefault(); $("playBtn").click();}
+  });
+  $("cField").onchange=e=>show.field=e.target.checked;
+  $("cLC").onchange=e=>show.lc=e.target.checked;
+  $("cTrail").onchange=e=>show.trail=e.target.checked;
+
+  // 드래그
+  let dm=null; const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+  function pick(px,py){
+    const m=phaseCv._map; if(!m) return "state";
+    const [V]=m.inv(px,py); const I=curI().I;
+    const wr=vNull(V,I), wg=winf(V);
+    const dr=isFinite(wr)?Math.abs(py-m.Y(wr)):1e9, dg=Math.abs(py-m.Y(wg));
+    if(dr<11&&dr<=dg) return "red";
+    if(dg<11) return "green";
+    return "state";
+  }
+  function applyDrag(px,py){
+    const m=phaseCv._map; if(!m) return;
+    const [V,w]=m.inv(px,py);
+    if(dm==="red"){
+      const on=holding||S.t<pulseUntil;
+      const t=w*P.gK*(V-EK)+gL*(V-EL)+P.gCa*minf(V)*(V-ECa);
+      P.I0=clamp(t-(on?P.amp:0), parseFloat($("sI").min), parseFloat($("sI").max));
+      scheduleCycle();
+    } else if(dm==="green"){
+      const ww=clamp(w,0.02,0.98);
+      P.V3=clamp(V-P.V4*Math.atanh(2*ww-1),-40,30); scheduleCycle();
+    } else { S.V=clamp(V,VMIN,VMAX); S.w=clamp(w,0,1); traj=[]; above=false; }
+    sync();
+  }
+  phaseCv.addEventListener("pointerdown",e=>{
+    const r=phaseCv.getBoundingClientRect(); dm=pick(e.clientX-r.left,e.clientY-r.top);
+    phaseCv.setPointerCapture(e.pointerId); applyDrag(e.clientX-r.left,e.clientY-r.top);
+  });
+  phaseCv.addEventListener("pointermove",e=>{
+    const r=phaseCv.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+    if(dm) applyDrag(px,py); else phaseCv.style.cursor=pick(px,py)==="state"?"crosshair":"grab";
+  });
+  const end=()=>dm=null;
+  phaseCv.addEventListener("pointerup",end); phaseCv.addEventListener("pointercancel",end);
+
+  setMode("sn");
+  requestAnimationFrame(frame);
+})();
+</script>
